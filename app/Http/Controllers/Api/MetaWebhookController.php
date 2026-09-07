@@ -41,21 +41,19 @@ class MetaWebhookController extends Controller
         // 2. Handle Meta's POST Event Data Payload (Actual Webhook data)
         if ($request->isMethod('post')) {
             $payload = $request->all();
-            
             Log::info('Meta Webhook Event Received:', $payload);
             
-            // AUTOMATIC REPLY LOGIC FOR INCOMING WHATSAPP MESSAGES:
             try {
+                // Step securely through Meta's arrays safely
                 if (isset($payload['entry'][0]['changes'][0]['value']['messages'][0])) {
                     $messageData = $payload['entry'][0]['changes'][0]['value']['messages'][0];
                     
-                    $fromMobileNumber = $messageData['from']; // The user's WhatsApp number
+                    $fromMobileNumber = $messageData['from']; 
                     $messageType = $messageData['type'];
-
+        
                     if ($messageType === 'text') {
                         $userText = $messageData['text']['body'];
-
-                        // Example: Auto-respond if they type "hi"
+        
                         if (strtolower(trim($userText)) === 'hi') {
                             $this->whatsAppService->sendText($fromMobileNumber, 'Hello! Welcome to Birehrua360. How can we help you today?');
                         }
@@ -67,6 +65,7 @@ class MetaWebhookController extends Controller
             
             return response('EVENT_RECEIVED', 200);
         }
+
 
         return response('Method Not Allowed', 405);
     }
