@@ -11,6 +11,7 @@ use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WhatsappAccountController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CronController;
 
 // ---------------------------------------------------------------- public
 Route::middleware('guest')->group(function () {
@@ -65,4 +66,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // Sandbox-only demo triggers.
     Route::post('/sandbox/campaigns/{campaign}/advance', [SandboxController::class, 'advanceCampaign'])->name('sandbox.advance');
     Route::post('/sandbox/inbound', [SandboxController::class, 'inboundReply'])->name('sandbox.inbound');
+
+    Route::get('/cron/run/{token}', [CronController::class, 'run'])->name('cron.run');
+    // and inside the auth group:
+    Route::post('/campaigns/{campaign}/run', [CampaignController::class, 'run'])->name('campaigns.run');
 });

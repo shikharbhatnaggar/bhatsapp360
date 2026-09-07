@@ -34,8 +34,21 @@
                 @if ($template->whatsapp_template_id)
                     <span class="num text-sm text-ink-500">Meta ID {{ $template->whatsapp_template_id }}</span>
                 @endif
+                @if ($template->last_synced_at)
+                    <span class="text-sm text-ink-500">Checked {{ $template->last_synced_at->diffForHumans() }}</span>
+                @endif
             </div>
-
+            @if ($template->status === 'APPROVED')
+                <p class="mt-4 text-sm text-ink-500">
+                    Quality rating:
+                    <span class="text-ink-900">
+                        {{ $template->quality_score && $template->quality_score !== 'UNKNOWN'
+                            ? ucfirst(strtolower($template->quality_score))
+                            : 'pending' }}
+                    </span>
+                    — Meta scores this once enough messages have been delivered. It does not affect whether you can send.
+                </p>
+            @endif
             @if ($template->status === 'PENDING')
                 <p class="mt-4 rounded-lg bg-signal-50 px-3.5 py-2.5 text-sm text-signal-700">
                     Waiting on WhatsApp. Use “Check review status” on the templates list to pull the decision.

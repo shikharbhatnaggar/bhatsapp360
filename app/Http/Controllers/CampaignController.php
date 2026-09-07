@@ -9,6 +9,7 @@ use App\Models\Message;
 use App\Models\MessageTemplate;
 use App\Services\PricingService;
 use App\Services\TemplateBuilder;
+use App\Services\CampaignRunner;
 use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -154,7 +155,12 @@ class CampaignController extends Controller
             ['template' => $template->name, 'estimated_cost' => $quote['total'], 'currency' => $quote['currency']],
         );
 
-        SendCampaignJob::dispatch($campaign->id);
+        if (config('whatsapp.send_inline')) {
+            $campaign->forceFill(['status' => 'sending', 'started_at' => now()])->save();
+            app(CampaignRunner::class)->drain(config('whatsapp.inline_batch'), 20, $campaign->id);
+        } else {
+            SendCampaignJob::dispatch($campaign->id);
+        }
 
         return redirect()->route('campaigns.show', $campaign)
             ->with('status', 'Sending to '.$campaign->recipients_count.' recipients. Delivery updates appear below as WhatsApp confirms them.');

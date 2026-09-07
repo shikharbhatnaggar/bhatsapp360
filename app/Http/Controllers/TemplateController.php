@@ -138,11 +138,17 @@ class TemplateController extends Controller
             return back()->with('error', 'Connect a WhatsApp number first.');
         }
 
-        $updated = $this->sync->sync($account);
+        // $updated = $this->sync->sync($account);
 
-        return back()->with('status', $updated
-            ? $updated.' template status'.($updated === 1 ? '' : 'es').' updated from WhatsApp.'
-            : 'No status changes yet.');
+        // return back()->with('status', $updated
+        //     ? $updated.' template status'.($updated === 1 ? '' : 'es').' updated from WhatsApp.'
+        //     : 'No status changes yet.');
+
+        Schedule::call(function (TemplateSyncService $sync) {
+            WhatsappAccount::withoutGlobalScope('tenant')
+                ->where('is_active', true)
+                ->each(fn ($account) => $sync->sync($account));
+        })->everyFifteenMinutes()->name('templates:sync')->withoutOverlapping();
     }
 
     public function destroy(MessageTemplate $template)

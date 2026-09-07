@@ -74,26 +74,52 @@ class TemplateSyncService
         return ['ok' => false, 'message' => Arr::get($result, 'error.message', 'WhatsApp rejected the submission.')];
     }
 
-    /** Pull live statuses for one account and reconcile local rows. */
-    public function sync(WhatsappAccount $account): int
+    /**
+     * Pull live statuses for one account and reconcile local rows.
+     *
+     * @return array{ok: bool, updated: int, fetched: int, imported: int, message: string}
+     */
+    public function sync(WhatsappAccount $account): array
     {
         $client = WhatsAppClient::for($account);
         $response = $client->listTemplates();
-        $updated = 0;
+
+        // A failed lookup must not look like "nothing changed".
+        if (! ($response['ok'] ?? false)) {
+            ActivityLogger::log(
+                'template.sync_failed',
+                'Could not read template statuses from WhatsApp',
+                null,
+                $response['error'] ?? [],
+                $account->tenant_id,
+            );
+
+            return [
+                'ok' => false,
+                'updated' => 0,
+                'fetched' => 0,
+                'imported' => 0,
+                'message' => 'WhatsApp would not return your templates: '.WhatsAppClient::describeError($response),
+            ];
+        }
 
         $remote = collect(Arr::get($response, 'body.data', []))
-            ->keyBy(fn ($row) => $row['name'].'|'.$row['language']);
+            ->keyBy(fn ($row) => strtolower($row['name'] ?? '').'|'.($row['language'] ?? ''));
 
+        // Match on the tenant, not the account column: templates submitted before
+        // a number was connected would otherwise never reconcile.
         $templates = MessageTemplate::withoutGlobalScope('tenant')
-            ->where('whatsapp_account_id', $account->id)
-            ->whereIn('status', ['PENDING', 'APPROVED', 'PAUSED', 'REJECTED'])
+            ->where('tenant_id', $account->tenant_id)
+            ->where(fn ($q) => $q->where('whatsapp_account_id', $account->id)->orWhereNull('whatsapp_account_id'))
             ->get();
 
-        foreach ($templates as $template) {
-            $row = $remote->get($template->name.'|'.$template->language);
+        $updated = 0;
 
-            // Sandbox mode has no remote list, so approve anything that has
-            // been pending longer than the configured delay.
+        foreach ($templates as $template) {
+            $key = strtolower($template->name).'|'.$template->language;
+            $row = $remote->pull($key);
+
+            // Sandbox has no remote list, so approve anything pending long enough.
             if (! $row && config('whatsapp.sandbox')) {
                 if ($template->status === 'PENDING'
                     && $template->submitted_at
@@ -109,36 +135,120 @@ class TemplateSyncService
             }
 
             $status = strtoupper($row['status'] ?? $template->status);
-            $changed = $status !== $template->status;
+            // Meta re-classifies templates during review; the category drives pricing,
+            // so take theirs rather than trusting what we submitted.
+            $category = strtoupper($row['category'] ?? $template->category);
+            $reason = $row['rejected_reason'] ?? null;
+            $reason = in_array($reason, [null, '', 'NONE'], true) ? null : $reason;
+
+            $changed = $status !== $template->status || $category !== $template->category;
 
             $template->update([
                 'status' => $status,
+                'category' => in_array($category, array_keys(config('whatsapp.categories')), true) ? $category : $template->category,
+                'whatsapp_account_id' => $template->whatsapp_account_id ?? $account->id,
                 'whatsapp_template_id' => $row['id'] ?? $template->whatsapp_template_id,
                 'quality_score' => Arr::get($row, 'quality_score.score'),
-                'rejected_reason' => $row['rejected_reason'] ?? null,
+                'rejected_reason' => $reason,
                 'approved_at' => $status === 'APPROVED' ? ($template->approved_at ?? now()) : null,
                 'last_synced_at' => now(),
             ]);
 
-            if ($changed) {
-                $updated++;
-
-                $template->versions()->latest('version')->first()?->update([
-                    'status' => $status,
-                    'reviewed_at' => now(),
-                    'review_note' => $row['rejected_reason'] ?? null,
-                ]);
-
-                ActivityLogger::log(
-                    'template.status_changed',
-                    "Template “{$template->name}” is now {$status}",
-                    $template,
-                    ['status' => $status, 'reason' => $row['rejected_reason'] ?? null],
-                    $template->tenant_id,
-                );
+            if (! $changed) {
+                continue;
             }
+
+            $updated++;
+
+            $template->versions()->latest('version')->first()?->update([
+                'status' => $status,
+                'reviewed_at' => now(),
+                'review_note' => $reason,
+            ]);
+
+            ActivityLogger::log(
+                'template.status_changed',
+                "Template “{$template->name}” is now {$status}",
+                $template,
+                ['status' => $status, 'category' => $category, 'reason' => $reason],
+                $template->tenant_id,
+            );
         }
 
-        return $updated;
+        // Anything left in $remote exists on WhatsApp but not here — usually built
+        // in the Meta UI. Adopt it so the console reflects the account.
+        $imported = $this->adopt($account, $remote);
+
+        $fetched = count(Arr::get($response, 'body.data', []));
+
+        return [
+            'ok' => true,
+            'updated' => $updated,
+            'fetched' => $fetched,
+            'imported' => $imported,
+            'message' => $this->summarise($fetched, $updated, $imported),
+        ];
+    }
+
+    /** Create local rows for templates that exist on WhatsApp but not here. */
+    protected function adopt(WhatsappAccount $account, $remote): int
+    {
+        $imported = 0;
+
+        foreach ($remote as $row) {
+            $category = strtoupper($row['category'] ?? 'MARKETING');
+
+            if (! in_array($category, array_keys(config('whatsapp.categories')), true)) {
+                continue;
+            }
+
+            $template = MessageTemplate::withoutGlobalScope('tenant')->create([
+                'tenant_id' => $account->tenant_id,
+                'whatsapp_account_id' => $account->id,
+                'name' => $row['name'],
+                'language' => $row['language'] ?? 'en_US',
+                'category' => $category,
+                'status' => strtoupper($row['status'] ?? 'APPROVED'),
+                'whatsapp_template_id' => $row['id'] ?? null,
+                'components' => $row['components'] ?? [],
+                'quality_score' => Arr::get($row, 'quality_score.score'),
+                'approved_at' => strtoupper($row['status'] ?? '') === 'APPROVED' ? now() : null,
+                'last_synced_at' => now(),
+                'version' => 1,
+            ]);
+
+            ActivityLogger::log(
+                'template.imported',
+                "Template “{$template->name}” imported from WhatsApp",
+                $template,
+                ['status' => $template->status],
+                $account->tenant_id,
+            );
+
+            $imported++;
+        }
+
+        return $imported;
+    }
+
+    protected function summarise(int $fetched, int $updated, int $imported): string
+    {
+        if ($fetched === 0) {
+            return 'WhatsApp returned no templates for this business account.';
+        }
+
+        $parts = [];
+
+        if ($updated) {
+            $parts[] = $updated.' status'.($updated === 1 ? '' : 'es').' updated';
+        }
+
+        if ($imported) {
+            $parts[] = $imported.' template'.($imported === 1 ? '' : 's').' imported';
+        }
+
+        return $parts
+            ? implode(' and ', $parts).'.'
+            : 'Checked '.$fetched.' template'.($fetched === 1 ? '' : 's').' on WhatsApp — nothing has changed.';
     }
 }
