@@ -29,4 +29,8 @@ return [
         'AUTHENTICATION' => 0.1250,
         'SERVICE' => 0.0,
     ],
+
+    'cron_token' => env('CRON_TOKEN'),
+    'send_inline' => (bool) env('WHATSAPP_SEND_INLINE', false),
+    'inline_batch' => (int) env('WHATSAPP_INLINE_BATCH', 25),
 ];
