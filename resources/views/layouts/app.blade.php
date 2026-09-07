@@ -7,6 +7,7 @@
         ['route' => 'templates.index', 'label' => 'Templates', 'match' => 'templates.*'],
         ['route' => 'customers.index', 'label' => 'Contacts', 'match' => 'customers.*'],
         ['route' => 'inbox.index', 'label' => 'Replies', 'match' => 'inbox.*'],
+        ['route' => 'wallet.index', 'label' => 'Wallet', 'match' => 'wallet.*'],
         ['route' => 'logs.index', 'label' => 'Activity', 'match' => 'logs.*'],
     ];
 @endphp
@@ -34,6 +35,13 @@
 
             <div class="my-3 border-t border-ink-700"></div>
 
+            @if (auth()->user()->is_platform_admin)
+                <a href="{{ route('admin.topups') }}"
+                   class="block rounded-lg px-3 py-2 text-sm {{ request()->routeIs('admin.*') ? 'bg-ink-700 text-white' : 'hover:bg-ink-700/50 hover:text-white' }}">
+                    Top-up approvals
+                </a>
+            @endif
+
             <a href="{{ route('settings.whatsapp') }}"
                class="block rounded-lg px-3 py-2 text-sm {{ request()->routeIs('settings.*') ? 'bg-ink-700 text-white' : 'hover:bg-ink-700/50 hover:text-white' }}">
                 WhatsApp settings
@@ -49,6 +57,9 @@
                 @else
                     <p class="mt-1 text-signal-200">No number connected</p>
                 @endif
+                <p class="num mt-2 {{ $tenant->wallet_balance <= config('wallet.low_balance_threshold') ? 'text-signal-200' : 'text-ink-300' }}">
+                    Wallet @money((float) $tenant->wallet_balance, $tenant->currency)
+                </p>
                 @if (config('whatsapp.sandbox'))
                     <p class="mt-2 text-ink-300">Sandbox mode — Graph calls are simulated.</p>
                 @endif

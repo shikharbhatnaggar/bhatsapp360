@@ -36,8 +36,24 @@
                     </tr>
                 </tfoot>
             </table>
+            @php $balance = (float) $tenant->wallet_balance; $affordable = $balance >= $quote['total']; @endphp
+
+            <div class="mt-4 rounded-lg border {{ $affordable ? 'border-ink-200 bg-ink-50' : 'border-alert-200 bg-alert-50' }} px-4 py-3 text-sm">
+                <div class="flex justify-between"><span class="text-ink-500">Wallet balance</span><span class="num">@money($balance, $quote['currency'])</span></div>
+                <div class="flex justify-between"><span class="text-ink-500">This send</span><span class="num">−@money($quote['total'], $quote['currency'])</span></div>
+                <div class="mt-1.5 flex justify-between border-t border-ink-200 pt-1.5">
+                    <span>Balance after</span><span class="num">@money($balance - $quote['total'], $quote['currency'])</span>
+                </div>
+                @unless ($affordable)
+                    <p class="mt-2 text-alert-700">
+                        Not enough to cover this send.
+                        <a href="{{ route('wallet.index') }}" class="underline underline-offset-2">Top up your wallet</a> first.
+                    </p>
+                @endunless
+            </div>
+
             <p class="mt-3 text-xs leading-relaxed text-ink-500">
-                WhatsApp charges per delivered message. Messages that fail are not billed, so the final amount on the send page may be lower than this estimate.
+                Each message is charged when WhatsApp accepts it. Anything WhatsApp reports as undeliverable is refunded to your wallet automatically.
             </p>
         </section>
 
