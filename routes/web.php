@@ -71,3 +71,21 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // and inside the auth group:
     Route::post('/campaigns/{campaign}/run', [CampaignController::class, 'run'])->name('campaigns.run');
 });
+
+
+
+Route::get('/view-logs-securely', function () {
+    $logPath = storage_path('logs/laravel.log');
+
+    if (!file_exists($logPath)) {
+        return response()->json(['message' => 'Log file does not exist yet. No errors recorded.']);
+    }
+
+    // Read the last 50 lines of the log file to avoid overloading the browser
+    $file = file($logPath);
+    $lastLines = array_slice($file, -50); 
+    
+    return response(implode("", $lastLines), 200)
+        ->header('Content-Type', 'text/plain');
+});
+
