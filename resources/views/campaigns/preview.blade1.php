@@ -6,13 +6,6 @@
 @section('content')
 <div class="grid gap-4 lg:grid-cols-[1fr_360px]">
     <div class="space-y-4">
-        @if ($quote['uses_fallback'])
-            <div class="rounded-xl border border-alert-200 bg-alert-50 p-4 text-sm text-alert-700">
-                Some recipients have no matching rate card row, so they are priced at cost with no markup.
-                Check <span class="font-mono text-xs">whatsapp_rates</span> before sending.
-            </div>
-        @endif
-
         <section class="rounded-xl border border-ink-200 bg-white p-5">
             <h2 class="text-base">Cost</h2>
             <table class="mt-4 w-full text-sm">
@@ -35,11 +28,6 @@
                 @endforeach
                 </tbody>
                 <tfoot>
-                    <tr class="text-ink-500">
-                        <td class="pt-3 text-xs" colspan="2">Meta cost @money($quote['meta_total'], $quote['currency'])
-                            · your margin @money($quote['markup_total'], $quote['currency'])</td>
-                        <td class="pt-3"></td><td class="pt-3"></td>
-                    </tr>
                     <tr class="border-t border-ink-200">
                         <td class="pt-3">{{ ucfirst(strtolower($template->category)) }} rate</td>
                         <td class="num pt-3 text-right">{{ number_format($quote['count']) }}</td>
