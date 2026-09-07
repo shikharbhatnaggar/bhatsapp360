@@ -4,7 +4,7 @@
     "description": "Bhatsapp — a WhatsApp Business Platform facilitator console for multi-tenant messaging.",
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.9"
     },
@@ -33,6 +33,9 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.2.12"
         }
     },
     "minimum-stability": "stable",
