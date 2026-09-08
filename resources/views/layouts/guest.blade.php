@@ -3,10 +3,7 @@
 @section('body')
 <div class="min-h-full lg:grid lg:grid-cols-[1.1fr_1fr]">
     <div class="hidden lg:flex flex-col justify-between bg-ink-900 text-ink-100 p-12">
-        <div class="flex items-center gap-2.5">
-            <span class="grid h-8 w-8 place-items-center rounded-lg bg-jade-600 text-white font-semibold">B</span>
-            <span class="text-lg tracking-tight text-white">Bhatsapp</span>
-        </div>
+        @include('partials.brand', ['tone' => 'dark', 'size' => 'h-10'])
 
         <div class="max-w-md">
             <h1 class="text-4xl leading-tight text-white">Run every WhatsApp conversation your business has, from one desk.</h1>
@@ -21,13 +18,25 @@
             </dl>
         </div>
 
-        <p class="text-sm text-ink-500">Built on the WhatsApp Cloud API.</p>
+        <p class="text-sm text-ink-500">
+            Built on the WhatsApp Cloud API. &copy; {{ now()->year }} {{ config('app.company') }}.
+        </p>
     </div>
 
-    <div class="flex min-h-full items-center justify-center px-6 py-14">
+    <div class="flex min-h-full flex-col items-center justify-center px-6 py-14">
         <div class="w-full max-w-sm">
+            <a href="{{ url('/') }}" class="mb-8 inline-block lg:hidden">
+                @include('partials.brand', ['size' => 'h-9'])
+            </a>
+
             @yield('form')
         </div>
+
+        <p class="mt-10 text-xs text-ink-500">
+            &copy; {{ now()->year }} {{ config('app.company') }} ·
+            <a href="{{ route('privacy') }}" class="hover:underline underline-offset-2">Privacy</a> ·
+            <a href="{{ route('terms') }}" class="hover:underline underline-offset-2">Terms</a>
+        </p>
     </div>
 </div>
 @endsection

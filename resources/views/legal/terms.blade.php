@@ -4,18 +4,17 @@
 @section('body')
 @php
     // TODO: replace these values, then delete this comment.
-    $company = 'Shiventech Consulting';
-    $address = 'Purushottam Vihar, Golek Ka Mandir, Gwalior, MP, 474005, INDIA';
-    $email = 'support@shiventech.co.in';
-    $jurisdiction = 'Gwalior, MP, India';
-    $effective = '14 September 2026';
+    $company = '[LEGAL ENTITY NAME]';
+    $address = '[REGISTERED ADDRESS, CITY, STATE, PIN, INDIA]';
+    $email = '[support@yourdomain.com]';
+    $jurisdiction = '[CITY], [STATE]';
+    $effective = '[DD Month YYYY]';
 @endphp
 
 <div class="mx-auto max-w-3xl px-6 py-14">
     <header class="border-b border-ink-200 pb-8">
-        <a href="{{ url('/') }}" class="flex items-center gap-2.5">
-            <span class="grid h-8 w-8 place-items-center rounded-lg bg-jade-600 text-white font-semibold">B</span>
-            <span class="tracking-tight">Bhatsapp</span>
+        <a href="{{ url('/') }}" class="inline-block">
+            @include('partials.brand', ['size' => 'h-10'])
         </a>
         <h1 class="mt-8 text-3xl tracking-tight">Terms of Service</h1>
         <p class="mt-2 text-sm text-ink-500">Effective {{ $effective }} · {{ $company }}</p>
@@ -193,9 +192,12 @@
         </section>
     </div>
 
-    <footer class="mt-14 flex gap-5 border-t border-ink-200 pt-6 text-sm text-ink-500">
-        <a href="{{ url('/') }}" class="underline underline-offset-2">Back to Bhatsapp</a>
-        <a href="{{ route('privacy') }}" class="underline underline-offset-2">Privacy Policy</a>
+    <footer class="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 pt-6 text-sm text-ink-500">
+        <p>&copy; {{ now()->year }} {{ $company }}. All rights reserved.</p>
+        <div class="flex gap-5">
+            <a href="{{ url('/') }}" class="underline underline-offset-2">Back to Bhatsapp</a>
+            <a href="{{ route('privacy') }}" class="underline underline-offset-2">Privacy Policy</a>
+        </div>
     </footer>
 </div>
 @endsection
