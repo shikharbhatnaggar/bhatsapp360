@@ -7,10 +7,9 @@ use App\Models\Campaign;
 use App\Models\Customer;
 use App\Models\Message;
 use App\Models\MessageTemplate;
-use App\Services\CampaignRunner;
 use App\Services\PricingService;
-use App\Services\WalletService;
 use App\Services\TemplateBuilder;
+use App\Services\CampaignRunner;
 use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,19 +47,15 @@ class CampaignController extends Controller
             ->orderBy('name')->get();
 
         // Indicative unit price per category so the picker can show a running total.
-        $resolved = collect(array_keys(config('whatsapp.categories')))
+        $rates = collect(array_keys(config('whatsapp.categories')))
             ->mapWithKeys(fn ($category) => [
-                $category => $this->pricing->rate($request->user()->tenant, $category, $request->user()->tenant->country_code),
+                $category => $this->pricing->rate($request->user()->tenant, $category, $request->user()->tenant->country_code)['price'],
             ]);
-
-        $rates = $resolved->map(fn ($rate) => $rate['price']);
-        $missingRates = $resolved->filter(fn ($rate) => ($rate['source'] ?? '') === 'fallback')->keys();
 
         return view('campaigns.create', [
             'templates' => $templates,
             'customers' => $customers,
             'rates' => $rates,
-            'missingRates' => $missingRates,
             'selectedTemplate' => $templates->firstWhere('id', $request->integer('template_id')),
         ]);
     }
@@ -112,23 +107,11 @@ class CampaignController extends Controller
             return back()->with('error', 'Connect a WhatsApp number before sending.');
         }
 
-        if ($reason = $account->blockedReason()) {
-            return back()->with('error', $reason);
-        }
-
         $template = MessageTemplate::findOrFail($data['message_template_id']);
         abort_unless($template->isSendable(), 422, 'Only approved templates can be sent.');
 
         $recipients = Customer::whereIn('id', $data['customer_ids'])->where('status', 'active')->get();
         $quote = $this->pricing->quote($tenant, $template->category, $recipients);
-
-        // Prepaid: the whole send must be funded before any of it goes out.
-        if (! app(WalletService::class)->canAfford($tenant, $quote['total'])) {
-            return redirect()->route('wallet.index')->with('error',
-                'This send costs '.$this->pricing->format($quote['total'], $quote['currency'])
-                .' but your wallet holds '.$this->pricing->format((float) $tenant->wallet_balance, $quote['currency'])
-                .'. Top up to continue.');
-        }
 
         $campaign = DB::transaction(function () use ($data, $template, $recipients, $quote, $account, $request) {
             $campaign = Campaign::create([
@@ -149,8 +132,6 @@ class CampaignController extends Controller
 
                 Message::create([
                     'campaign_id' => $campaign->id,
-                    'meta_cost' => $rate['meta'],
-                    'markup' => $rate['markup'],
                     'customer_id' => $customer->id,
                     'message_template_id' => $template->id,
                     'whatsapp_account_id' => $account->id,
@@ -174,8 +155,6 @@ class CampaignController extends Controller
             ['template' => $template->name, 'estimated_cost' => $quote['total'], 'currency' => $quote['currency']],
         );
 
-        // With a worker, this queues. Without one, send inline so the MVP works
-        // on hosts that cannot run queue:work.
         if (config('whatsapp.send_inline')) {
             $campaign->forceFill(['status' => 'sending', 'started_at' => now()])->save();
             app(CampaignRunner::class)->drain(config('whatsapp.inline_batch'), 20, $campaign->id);
@@ -185,20 +164,6 @@ class CampaignController extends Controller
 
         return redirect()->route('campaigns.show', $campaign)
             ->with('status', 'Sending to '.$campaign->recipients_count.' recipients. Delivery updates appear below as WhatsApp confirms them.');
-    }
-
-    /** Send whatever is still queued for this campaign, without a worker. */
-    public function run(Campaign $campaign, CampaignRunner $runner)
-    {
-        $result = $runner->drain(config('whatsapp.inline_batch'), 20, $campaign->id);
-
-        $message = $result['sent'].' sent, '.$result['failed'].' failed, '.$result['remaining'].' still pending.';
-
-        if ($result['throttled']) {
-            $message .= ' WhatsApp is rate limiting — wait a moment and run it again.';
-        }
-
-        return back()->with('status', $message);
     }
 
     /** Per-recipient delivery tracking. */

@@ -28,6 +28,37 @@ class WhatsappAccount extends Model
         ];
     }
 
+        /** The value the demo seeder plants, so we can tell it apart from a real token. */
+    public const PLACEHOLDER_TOKEN = 'EAAG-sandbox-token-replace-me';
+
+    /**
+     * A usable token is present and is not the seeded placeholder. Meta tokens
+     * are long and start with EAA; anything short is a paste that went wrong.
+     */
+    public function hasUsableToken(): bool
+    {
+        $token = (string) $this->access_token;
+
+        return $token !== ''
+            && $token !== self::PLACEHOLDER_TOKEN
+            && strlen($token) > 40;
+    }
+
+    /** True when a live Graph call would fail for a reason we can explain up front. */
+    public function blockedReason(): ?string
+    {
+        if (config('whatsapp.sandbox')) {
+            return null;
+        }
+
+        if (! $this->hasUsableToken()) {
+            return 'Sandbox mode is off but this workspace is still using the demo access token. '
+                .'Paste your system user token in WhatsApp settings, save, then run Test connection.';
+        }
+
+        return null;
+    }
+
     public function maskedToken(): string
     {
         $token = (string) $this->access_token;

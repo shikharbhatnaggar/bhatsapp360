@@ -4,15 +4,6 @@
 @section('subheading', 'Pick an approved template and the people who should get it.')
 
 @section('content')
-@if ($missingRates->isNotEmpty())
-    <div class="mb-4 rounded-xl border border-alert-200 bg-alert-50 p-4 text-sm text-alert-700">
-        <p>No rate card row matches {{ $missingRates->map(fn ($c) => strtolower($c))->join(', ') }}
-            for country <span class="num">{{ $tenant->country_code }}</span>, so those prices fall back to cost with no markup.</p>
-        <p class="mt-1.5">Add rows to <span class="font-mono text-xs">whatsapp_rates</span> using the ISO country code
-            (<span class="num">{{ $tenant->country_code }}</span>), not the dialing code, with the category in capitals.</p>
-    </div>
-@endif
-
 @if ($templates->isEmpty())
     <div class="rounded-xl border border-signal-200 bg-signal-50 p-6 text-sm text-signal-700">
         <p class="text-base">No approved templates yet</p>

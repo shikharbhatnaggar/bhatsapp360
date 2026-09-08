@@ -71,6 +71,98 @@ class WhatsAppClient
         return $this->normalise($response, ['method' => 'GET', 'url' => $url]);
     }
 
+    /**
+     * GET /{waba_id} — confirms the WhatsApp Business Account ID is real, is
+     * visible to this token, and that the token carries management permission.
+     */
+    public function verifyBusinessAccount(): array
+    {
+        if ($this->sandbox()) {
+            return $this->fake(200, [
+                'id' => $this->account->waba_id,
+                'name' => ($this->account->tenant?->name ?? 'Sandbox').' WABA',
+                'currency' => 'INR',
+                'timezone_id' => '95',
+            ]);
+        }
+
+        $url = $this->base().'/'.$this->account->waba_id;
+        $response = $this->http()->get($url, ['fields' => 'id,name,currency,timezone_id,account_review_status']);
+
+        return $this->normalise($response, ['method' => 'GET', 'url' => $url]);
+    }
+
+    /**
+     * Works out what a Graph object actually is, so we can say "that is a phone
+     * number ID, not a WABA ID" instead of relaying Meta's generic error 100.
+     */
+    public function identify(string $id): ?string
+    {
+        if ($this->sandbox()) {
+            return null;
+        }
+
+        $probes = [
+            'phone number' => 'display_phone_number',
+            'business portfolio' => 'verification_status',
+            'app' => 'namespace',
+        ];
+
+        foreach ($probes as $label => $field) {
+            $response = $this->http()->get($this->base().'/'.$id, ['fields' => $field]);
+
+            if ($response->successful() && ! empty($response->json($field))) {
+                return $label;
+            }
+        }
+
+        return null;
+    }
+
+    /** Human-readable Graph error, including the codes support will ask for. */
+    public static function describeError(array $result): string
+    {
+        $error = $result['error'] ?? [];
+        $message = $error['message'] ?? 'WhatsApp rejected the request.';
+        $bits = array_filter([
+            isset($error['code']) ? 'code '.$error['code'] : null,
+            isset($error['error_subcode']) && $error['error_subcode'] ? 'subcode '.$error['error_subcode'] : null,
+            isset($error['fbtrace_id']) ? 'trace '.$error['fbtrace_id'] : null,
+        ]);
+
+        return $bits ? $message.' ('.implode(', ', $bits).')' : $message;
+    }
+
+    /**
+     * GET /{waba_id}/subscribed_apps — which apps receive this account's events.
+     *
+     * Configuring webhook fields in the App dashboard is only half the wiring:
+     * the app must also be subscribed to the WABA itself. Embedded Signup does
+     * this for you; manual setups usually skip it, and then no callback ever fires.
+     */
+    public function subscribedApps(): array
+    {
+        if ($this->sandbox()) {
+            return $this->fake(200, ['data' => [['whatsapp_business_api_data' => ['name' => 'Sandbox app']]]]);
+        }
+
+        $url = $this->base().'/'.$this->account->waba_id.'/subscribed_apps';
+
+        return $this->normalise($this->http()->get($url), ['method' => 'GET', 'url' => $url]);
+    }
+
+    /** POST /{waba_id}/subscribed_apps — wires this account's events to your app. */
+    public function subscribeApp(): array
+    {
+        if ($this->sandbox()) {
+            return $this->fake(200, ['success' => true]);
+        }
+
+        $url = $this->base().'/'.$this->account->waba_id.'/subscribed_apps';
+
+        return $this->normalise($this->http()->post($url), ['method' => 'POST', 'url' => $url]);
+    }
+
     // --------------------------------------------------------------- templates
 
     /** POST /{waba_id}/message_templates — submits a template for review. */

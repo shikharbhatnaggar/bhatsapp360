@@ -15,7 +15,10 @@ use Illuminate\Support\Arr;
  */
 class MessageDispatcher
 {
-    public function __construct(protected TemplateBuilder $builder) {}
+    public function __construct(
+        protected TemplateBuilder $builder,
+        protected WalletService $wallet,
+    ) {}
 
     public function sendCampaignMessage(Message $message): Message
     {
@@ -28,6 +31,18 @@ class MessageDispatcher
 
         if (! $account || ! $template || ! $customer) {
             return $this->fail($message, ['message' => 'Missing sender, template or recipient.']);
+        }
+
+        // Refuse before spending anything at Meta if the wallet cannot cover it.
+        $tenant = $message->tenant ?? \App\Models\Tenant::find($message->tenant_id);
+        $charge = (float) $message->price;
+
+        if ($charge > 0 && ! $this->wallet->canAfford($tenant, $charge)) {
+            return $this->fail($message, [
+                'code' => 'wallet.insufficient',
+                'title' => 'Insufficient wallet balance',
+                'message' => 'Wallet balance is too low to send this message. Top up and retry.',
+            ]);
         }
 
         $payload = $this->builder->messagePayload($template, $customer);
@@ -52,6 +67,27 @@ class MessageDispatcher
         ])->save();
 
         $this->recordEvent($message, 'sent', 'api', $result['body']);
+
+        // Charge only once WhatsApp has accepted the message.
+        if ($charge > 0) {
+            $transaction = $this->wallet->debit(
+                $tenant,
+                $charge,
+                'debit',
+                'Message to '.$customer->phone.' ('.strtolower($message->pricing_category).')',
+                $message,
+                [
+                    'meta_cost' => (float) $message->meta_cost,
+                    'markup' => (float) $message->markup,
+                    'category' => $message->pricing_category,
+                    'campaign_id' => $campaign?->id,
+                ],
+            );
+
+            if ($transaction) {
+                $message->forceFill(['charged_at' => now()])->save();
+            }
+        }
 
         $customer->forceFill(['last_outbound_at' => now()])->save();
 

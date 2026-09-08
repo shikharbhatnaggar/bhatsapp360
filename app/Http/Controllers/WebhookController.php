@@ -100,7 +100,11 @@ class WebhookController extends Controller
         }
 
         $newStatus = strtolower($status['status'] ?? '');
-        $at = isset($status['timestamp']) ? Carbon::createFromTimestamp((int) $status['timestamp']) : now();
+        // Carbon 3 builds timestamps in UTC whatever app.timezone says, so convert
+        // explicitly — otherwise receipts land hours adrift of our own events.
+        $at = isset($status['timestamp'])
+            ? Carbon::createFromTimestamp((int) $status['timestamp'], config('app.timezone'))
+            : now();
 
         MessageStatusEvent::create([
             'message_id' => $message->id,
@@ -116,8 +120,16 @@ class WebhookController extends Controller
         if (Arr::has($status, 'pricing')) {
             $fields['pricing_category'] = strtoupper(Arr::get($status, 'pricing.category', $message->pricing_category));
 
+            // Utility templates delivered inside an open customer service window
+            // are free. If we already charged for it, hand the money back.
             if (Arr::get($status, 'pricing.billable') === false) {
                 $fields['price'] = 0;
+                $fields['meta_cost'] = 0;
+
+                if ($message->charged_at && config('wallet.refund_non_billable')) {
+                    app(\App\Services\WalletService::class)->refundMessage($message);
+                    $fields['charged_at'] = null;
+                }
             }
         }
 
@@ -137,6 +149,11 @@ class WebhookController extends Controller
         }
 
         $message->forceFill($fields)->save();
+
+        // We charge on send; if WhatsApp could not deliver it, give the money back.
+        if ($newStatus === 'failed' && $message->charged_at) {
+            app(\App\Services\WalletService::class)->refundMessage($message);
+        }
 
         // WhatsApp bills on delivery, so the campaign total firms up as receipts arrive.
         if ($message->campaign_id) {
@@ -210,7 +227,7 @@ class WebhookController extends Controller
 
         $customer->forceFill([
             'last_inbound_at' => isset($inbound['timestamp'])
-                ? Carbon::createFromTimestamp((int) $inbound['timestamp'])
+                ? Carbon::createFromTimestamp((int) $inbound['timestamp'], config('app.timezone'))
                 : now(),
         ])->save();
 

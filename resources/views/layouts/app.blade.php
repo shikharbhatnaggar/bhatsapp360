@@ -42,6 +42,11 @@
                 </a>
             @endif
 
+            <a href="{{ route('diagnostics') }}"
+               class="block rounded-lg px-3 py-2 text-sm {{ request()->routeIs('diagnostics') ? 'bg-ink-700 text-white' : 'hover:bg-ink-700/50 hover:text-white' }}">
+                Diagnostics
+            </a>
+
             <a href="{{ route('settings.whatsapp') }}"
                class="block rounded-lg px-3 py-2 text-sm {{ request()->routeIs('settings.*') ? 'bg-ink-700 text-white' : 'hover:bg-ink-700/50 hover:text-white' }}">
                 WhatsApp settings
