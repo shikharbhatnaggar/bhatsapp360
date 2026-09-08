@@ -8,7 +8,7 @@
     $address = 'Purushottam Vihar, Golek Ka Mandir, Gwalior, MP, 474005, INDIA';
     $email = 'support@shiventech.co.in';
     $grievanceOfficer = 'Shikhar Bhatnaggar';
-    $effective = '26 October 2026';
+    $effective = '26 September 2026';
 @endphp
 
 <div class="mx-auto max-w-3xl px-6 py-14">
