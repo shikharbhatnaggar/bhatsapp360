@@ -1,9 +1,10 @@
 @extends('layouts.base')
-@section('title', 'Terms of Service — Bhatsapp')
+@section('title', 'Terms of Service — '.config('app.name'))
 
 @section('body')
 @php
     // TODO: replace these values, then delete this comment.
+    $product = config('app.name');
     $company = '[LEGAL ENTITY NAME]';
     $address = '[REGISTERED ADDRESS, CITY, STATE, PIN, INDIA]';
     $email = '[support@yourdomain.com]';
@@ -26,16 +27,16 @@
             <h2 class="text-lg text-ink-900">1. Agreement</h2>
             <p class="mt-3">
                 These terms form a contract between you, or the business you represent (“you”), and
-                {{ $company }}, {{ $address }} (“we”, “us”). By creating an account or using Bhatsapp you
+                {{ $company }}, {{ $address }} (“we”, “us”). By creating an account or using {{ $product }} you
                 accept them. If you are agreeing on behalf of a business, you confirm you are authorised to
                 bind it.
             </p>
         </section>
 
         <section>
-            <h2 class="text-lg text-ink-900">2. What Bhatsapp does</h2>
+            <h2 class="text-lg text-ink-900">2. What {{ $product }} does</h2>
             <p class="mt-3">
-                Bhatsapp is a console for the WhatsApp Business Platform. It lets you connect your own
+                {{ $product }} is a console for the WhatsApp Business Platform. It lets you connect your own
                 WhatsApp Business Account, build and submit message templates for Meta's review, send messages
                 to contacts you supply, track delivery, and read replies.
             </p>
@@ -52,7 +53,7 @@
         <section>
             <h2 class="text-lg text-ink-900">3. Your account</h2>
             <ul class="mt-3 list-disc space-y-1.5 pl-5">
-                <li>You must be at least 18 and using Bhatsapp for business purposes.</li>
+                <li>You must be at least 18 and using {{ $product }} for business purposes.</li>
                 <li>You are responsible for the accuracy of your account details and for everything done under
                     your credentials. Tell us promptly if you suspect unauthorised access.</li>
                 <li>You are responsible for the WhatsApp Business Account, phone number and access tokens you
@@ -78,7 +79,7 @@
 
         <section>
             <h2 class="text-lg text-ink-900">5. Acceptable use</h2>
-            <p class="mt-3">You will not use Bhatsapp to:</p>
+            <p class="mt-3">You will not use {{ $product }} to:</p>
             <ul class="mt-3 list-disc space-y-1.5 pl-5">
                 <li>send messages to people who have not opted in, or who have opted out;</li>
                 <li>send unlawful, deceptive, harassing, hateful or misleading content;</li>
@@ -99,7 +100,7 @@
             </p>
             <p class="mt-3">
                 Meta may charge you separately for conversations under its own pricing. Amounts shown in
-                Bhatsapp are for your reference and are not a Meta invoice. Fees are exclusive of taxes, which
+                {{ $product }} are for your reference and are not a Meta invoice. Fees are exclusive of taxes, which
                 you are responsible for. Amounts already incurred are non-refundable except where required by
                 law.
             </p>
@@ -108,7 +109,7 @@
         <section>
             <h2 class="text-lg text-ink-900">7. Availability</h2>
             <p class="mt-3">
-                We aim to keep Bhatsapp available but do not promise uninterrupted service. Maintenance,
+                We aim to keep {{ $product }} available but do not promise uninterrupted service. Maintenance,
                 third-party outages and changes to Meta's APIs can all interrupt it. We may modify or
                 discontinue features, and will give reasonable notice of material changes where we can.
             </p>
@@ -126,7 +127,7 @@
         <section>
             <h2 class="text-lg text-ink-900">9. Intellectual property</h2>
             <p class="mt-3">
-                We own Bhatsapp and everything in it apart from your content. You own the content you upload
+                We own {{ $product }} and everything in it apart from your content. You own the content you upload
                 and send, and you grant us the licence needed to store, process and transmit it in order to
                 run the service.
             </p>
@@ -135,7 +136,7 @@
         <section>
             <h2 class="text-lg text-ink-900">10. Disclaimers</h2>
             <p class="mt-3">
-                Bhatsapp is provided “as is”. To the extent permitted by law we disclaim all warranties,
+                {{ $product }} is provided “as is”. To the extent permitted by law we disclaim all warranties,
                 express or implied, including fitness for a particular purpose. We do not warrant that any
                 message will be delivered, that any template will be approved, or that your WhatsApp account
                 will remain in good standing — those decisions rest with Meta.
@@ -169,7 +170,7 @@
             <h2 class="text-lg text-ink-900">13. Changes</h2>
             <p class="mt-3">
                 We may update these terms. We will post the revised version here and update the effective
-                date, and will notify you by email of material changes. Continuing to use Bhatsapp after
+                date, and will notify you by email of material changes. Continuing to use {{ $product }} after
                 changes take effect means you accept them.
             </p>
         </section>
@@ -195,7 +196,7 @@
     <footer class="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 pt-6 text-sm text-ink-500">
         <p>&copy; {{ now()->year }} {{ $company }}. All rights reserved.</p>
         <div class="flex gap-5">
-            <a href="{{ url('/') }}" class="underline underline-offset-2">Back to Bhatsapp</a>
+            <a href="{{ url('/') }}" class="underline underline-offset-2">Back to {{ $product }}</a>
             <a href="{{ route('privacy') }}" class="underline underline-offset-2">Privacy Policy</a>
         </div>
     </footer>

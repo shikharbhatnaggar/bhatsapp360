@@ -1,9 +1,17 @@
 @extends('layouts.app')
-@section('title', $campaign->name.' — Bhatsapp')
+@section('title', $campaign->name.' — '.config('app.name'))
 @section('heading', $campaign->name)
 @section('subheading', 'Template '.($campaign->template?->name ?? '—').' · started '.($campaign->started_at?->format('d M Y, g:i A') ?? 'not yet'))
 
 @section('actions')
+    @if ($counts['queued'] > 0)
+        <form method="POST" action="{{ route('campaigns.run', $campaign) }}">
+            @csrf
+            <button class="rounded-lg bg-jade-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-jade-700">
+                Send {{ $counts['queued'] }} pending
+            </button>
+        </form>
+    @endif
     @if (config('whatsapp.sandbox') && in_array($campaign->status, ['sending', 'completed']))
         <form method="POST" action="{{ route('sandbox.advance', $campaign) }}">
             @csrf
@@ -37,6 +45,14 @@
         <p class="mt-1 text-xs text-ink-500">est. @money((float) $campaign->estimated_cost, $campaign->currency)</p>
     </div>
 </section>
+
+@if ($counts['queued'] > 0)
+    <p class="mt-4 rounded-lg border border-signal-200 bg-signal-50 px-4 py-3 text-sm text-signal-700">
+        {{ $counts['queued'] }} {{ Str::plural('message', $counts['queued']) }} still waiting to go out.
+        They send when a queue worker picks them up, when your cron endpoint next runs, or when you press
+        <span class="text-signal-700">Send pending</span> above.
+    </p>
+@endif
 
 <div class="mt-4 flex flex-wrap gap-2 text-sm">
     <a href="{{ route('campaigns.show', $campaign) }}"

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', $template->name.' — Bhatsapp')
+@section('title', $template->name.' — '.config('app.name'))
 @section('heading', $template->name)
 @section('subheading', ucfirst(strtolower($template->category)).' · '.$template->language.' · version '.$template->version)
 
@@ -38,6 +38,7 @@
                     <span class="text-sm text-ink-500">Checked {{ $template->last_synced_at->diffForHumans() }}</span>
                 @endif
             </div>
+
             @if ($template->status === 'APPROVED')
                 <p class="mt-4 text-sm text-ink-500">
                     Quality rating:
@@ -49,6 +50,7 @@
                     — Meta scores this once enough messages have been delivered. It does not affect whether you can send.
                 </p>
             @endif
+
             @if ($template->status === 'PENDING')
                 <p class="mt-4 rounded-lg bg-signal-50 px-3.5 py-2.5 text-sm text-signal-700">
                     Waiting on WhatsApp. Use “Check review status” on the templates list to pull the decision.

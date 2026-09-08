@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', ($customer->exists ? 'Edit contact' : 'Add contact').' — Bhatsapp')
+@section('title', ($customer->exists ? 'Edit contact' : 'Add contact').' — '.config('app.name'))
 @section('heading', $customer->exists ? 'Edit '.$customer->name : 'Add a contact')
 
 @section('content')

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Add funds — Bhatsapp')
+@section('title', 'Add funds — '.config('app.name'))
 @section('heading', 'Add '.app(\App\Services\PricingService::class)->format((float) $topup->amount, $topup->currency))
 @section('subheading', 'Reference '.$topup->reference.' — include it in the payment note so we can match it.')
 

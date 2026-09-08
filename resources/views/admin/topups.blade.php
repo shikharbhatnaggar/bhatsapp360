@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Top-up approvals — Bhatsapp')
+@section('title', 'Top-up approvals — '.config('app.name'))
 @section('heading', 'Top-up approvals')
 @section('subheading', 'Match each UTR against your bank statement before approving. Approval credits the wallet immediately.')
 

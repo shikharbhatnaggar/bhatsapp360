@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'name' => env('APP_NAME', 'Bhatsapp'),
+    'name' => env('APP_NAME', 'Bhatsapp360'),
 
     // Legal entity shown in the footer copyright line and on the legal pages.
-    'company' => env('APP_COMPANY', 'Bhatsapp'),
+    'company' => env('APP_COMPANY', 'Bhatsapp360'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),

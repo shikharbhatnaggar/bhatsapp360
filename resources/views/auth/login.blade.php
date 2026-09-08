@@ -1,5 +1,5 @@
 @extends('layouts.guest')
-@section('title', 'Sign in — Bhatsapp')
+@section('title', 'Sign in — '.config('app.name'))
 
 @section('form')
     <h1 class="text-2xl tracking-tight">Sign in</h1>

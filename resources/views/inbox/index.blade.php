@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Replies — Bhatsapp')
+@section('title', 'Replies — '.config('app.name'))
 @section('heading', 'Replies')
 @section('subheading', 'Messages customers have sent back to your number.')
 

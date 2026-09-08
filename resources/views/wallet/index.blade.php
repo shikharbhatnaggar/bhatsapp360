@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Wallet — Bhatsapp')
+@section('title', 'Wallet — '.config('app.name'))
 @section('heading', 'Wallet')
 @section('subheading', 'Prepaid balance. Every message is charged when WhatsApp accepts it.')
 

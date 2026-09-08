@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Confirm send — Bhatsapp')
+@section('title', 'Confirm send — '.config('app.name'))
 @section('heading', 'Confirm this send')
 @section('subheading', 'This is exactly what goes out, and what it costs. Nothing is sent until you confirm.')
 
