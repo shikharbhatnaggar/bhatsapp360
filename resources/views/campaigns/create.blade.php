@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'New send — Bhatsapp')
+@section('title', 'New send — '.config('app.name'))
 @section('heading', 'New send')
 @section('subheading', 'Pick an approved template and the people who should get it.')
 

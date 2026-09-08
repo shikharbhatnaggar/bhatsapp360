@@ -1,9 +1,10 @@
 @extends('layouts.base')
-@section('title', 'Privacy Policy — Bhatsapp')
+@section('title', 'Privacy Policy — '.config('app.name'))
 
 @section('body')
 @php
     // TODO: replace these five values, then delete this comment.
+    $product = config('app.name');
     $company = '[LEGAL ENTITY NAME]';
     $address = '[REGISTERED ADDRESS, CITY, STATE, PIN, INDIA]';
     $email = '[privacy@yourdomain.com]';
@@ -25,7 +26,7 @@
         <section>
             <h2 class="text-lg text-ink-900">Who we are</h2>
             <p class="mt-3">
-                Bhatsapp is a messaging console operated by {{ $company }}, {{ $address }}. It lets businesses
+                {{ $product }} is a messaging console operated by {{ $company }}, {{ $address }}. It lets businesses
                 send and receive WhatsApp messages through the WhatsApp Business Platform operated by Meta
                 Platforms, Inc.
             </p>
@@ -128,14 +129,14 @@
             </p>
             <p class="mt-3">
                 To exercise any of these, email {{ $email }}. If your data was uploaded by a business using
-                Bhatsapp, we will forward your request to that business, since they decide what happens to it.
+                {{ $product }}, we will forward your request to that business, since they decide what happens to it.
             </p>
         </section>
 
         <section>
             <h2 class="text-lg text-ink-900">Opting out of messages</h2>
             <p class="mt-3">
-                Reply STOP to any message to opt out. Businesses using Bhatsapp are contractually required to
+                Reply STOP to any message to opt out. Businesses using {{ $product }} are contractually required to
                 obtain opt-in before sending marketing messages and to honour opt-out requests promptly, in
                 line with WhatsApp's Business Messaging Policy.
             </p>
@@ -154,7 +155,7 @@
         <section>
             <h2 class="text-lg text-ink-900">Children</h2>
             <p class="mt-3">
-                Bhatsapp is a business tool and is not directed at children. We do not knowingly collect data
+                {{ $product }} is a business tool and is not directed at children. We do not knowingly collect data
                 from anyone under 18. If you believe a child's data has reached us, contact us and we will
                 delete it.
             </p>
@@ -185,7 +186,7 @@
 
     <footer class="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 pt-6 text-sm text-ink-500">
         <p>&copy; {{ now()->year }} {{ $company }}. All rights reserved.</p>
-        <a href="{{ url('/') }}" class="underline underline-offset-2">Back to Bhatsapp</a>
+        <a href="{{ url('/') }}" class="underline underline-offset-2">Back to {{ $product }}</a>
     </footer>
 </div>
 @endsection

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Overview — Bhatsapp')
+@section('title', 'Overview — '.config('app.name'))
 @section('heading', 'Overview')
 @section('subheading', $from->format('d M Y').' to '.$to->format('d M Y'))
 

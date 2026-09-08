@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Diagnostics — Bhatsapp')
+@section('title', 'Diagnostics — '.config('app.name'))
 @section('heading', 'Diagnostics')
 @section('subheading', 'What is actually deployed on this server, and what is missing.')
 

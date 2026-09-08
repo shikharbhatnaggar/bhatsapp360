@@ -1,5 +1,5 @@
 @extends('layouts.guest')
-@section('title', 'Create a workspace — Bhatsapp')
+@section('title', 'Create a workspace — '.config('app.name'))
 
 @section('form')
     <h1 class="text-2xl tracking-tight">Create your workspace</h1>

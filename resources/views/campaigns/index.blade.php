@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Sends — Bhatsapp')
+@section('title', 'Sends — '.config('app.name'))
 @section('heading', 'Sends')
 @section('subheading', 'Every batch you have sent, with how it landed.')
 

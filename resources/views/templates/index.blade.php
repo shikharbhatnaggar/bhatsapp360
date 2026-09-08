@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Templates — Bhatsapp')
+@section('title', 'Templates — '.config('app.name'))
 @section('heading', 'Templates')
 @section('subheading', 'Every template WhatsApp has reviewed, and the ones still waiting.')
 

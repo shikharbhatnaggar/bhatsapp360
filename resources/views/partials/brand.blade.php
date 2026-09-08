@@ -9,5 +9,5 @@
 
 <span class="flex items-center gap-2.5">
     <img src="{{ asset('images/bhatsapp-logo.png') }}" alt="" class="{{ $size }} w-auto shrink-0">
-    <span class="tracking-tight {{ $tone === 'dark' ? 'text-white' : 'text-ink-900' }}">Bhatsapp</span>
+    <span class="tracking-tight {{ $tone === 'dark' ? 'text-white' : 'text-ink-900' }}">{{ config('app.name') }}</span>
 </span>

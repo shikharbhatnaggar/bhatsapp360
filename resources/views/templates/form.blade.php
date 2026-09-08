@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', ($template->exists ? 'Edit template' : 'New template').' — Bhatsapp')
+@section('title', ($template->exists ? 'Edit template' : 'New template').' — '.config('app.name'))
 @section('heading', $template->exists ? 'Edit '.$template->name : 'New template')
 @section('subheading', $template->exists
     ? 'Saving sends this back to WhatsApp for review. It cannot be used to send until they approve it again.'
