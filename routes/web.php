@@ -9,6 +9,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\SandboxController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\WalletController;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public and unauthenticated: Meta requires the privacy policy to be reachable
 // without a login during app review.
+Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
 
@@ -40,7 +42,7 @@ Route::get('/cron/run/{token}', [CronController::class, 'run'])->name('cron.run'
 
 // ---------------------------------------------------------------- console
 Route::middleware(['auth', 'tenant'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/settings/whatsapp', [WhatsappAccountController::class, 'edit'])->name('settings.whatsapp');
     Route::post('/settings/whatsapp', [WhatsappAccountController::class, 'save'])->name('settings.whatsapp.save');

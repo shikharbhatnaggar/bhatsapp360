@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PricingRate;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\ActivityLogger;
@@ -37,14 +36,6 @@ class AuthController extends Controller
                 'country_code' => strtoupper($data['country_code']),
                 'currency' => strtoupper($data['country_code']) === 'IN' ? 'INR' : 'USD',
             ]);
-
-            // Seed this workspace with the default rate card it will be billed at.
-            foreach (config('whatsapp.fallback_rates') as $category => $price) {
-                PricingRate::firstOrCreate(
-                    ['tenant_id' => $tenant->id, 'country_code' => $tenant->country_code, 'category' => $category],
-                    ['price' => $price, 'currency' => $tenant->currency],
-                );
-            }
 
             return User::create([
                 'tenant_id' => $tenant->id,
@@ -93,6 +84,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('home');
     }
 }
