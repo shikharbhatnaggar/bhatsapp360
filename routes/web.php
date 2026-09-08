@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\CronController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DiagnosticsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\SandboxController;
@@ -84,6 +85,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('/admin/topups/{topup}/reject', [AdminTopupController::class, 'reject'])->name('admin.topups.reject');
 
     Route::get('/logs', [ActivityLogController::class, 'index'])->name('logs.index');
+    Route::get('/diagnostics', [DiagnosticsController::class, 'index'])->name('diagnostics');
 
     // Sandbox-only demo triggers.
     Route::post('/sandbox/campaigns/{campaign}/advance', [SandboxController::class, 'advanceCampaign'])->name('sandbox.advance');
