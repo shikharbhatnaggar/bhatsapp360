@@ -5,11 +5,11 @@
 @php
     // TODO: replace these five values, then delete this comment.
     $product = config('app.name');
-    $company = '[LEGAL ENTITY NAME]';
-    $address = '[REGISTERED ADDRESS, CITY, STATE, PIN, INDIA]';
-    $email = '[privacy@yourdomain.com]';
-    $grievanceOfficer = '[GRIEVANCE OFFICER NAME]';
-    $effective = '[DD Month YYYY]';
+    $company = 'Shiventech Consulting';
+    $address = 'Purushottam Vihar, Golek Ka Mandir, Gwalior, MP, 474005, INDIA';
+    $email = 'support@shiventech.co.in';
+    $grievanceOfficer = 'Shikhar Bhatnaggar';
+    $effective = '26 September 2026';
 @endphp
 
 <div class="mx-auto max-w-3xl px-6 py-14">
