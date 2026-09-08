@@ -13,6 +13,13 @@ return [
     'minimum_topup' => (float) env('WALLET_MIN_TOPUP', 500),
     'suggested_amounts' => [500, 1000, 2500, 5000],
 
+    /*
+     | WhatsApp does not bill for some messages — notably utility templates
+     | delivered inside an open 24-hour customer service window. Refund the
+     | client when that happens. Set false to keep your markup regardless.
+     */
+    'refund_non_billable' => (bool) env('WALLET_REFUND_NON_BILLABLE', true),
+
     // Warn the customer once the balance drops below this.
     'low_balance_threshold' => (float) env('WALLET_LOW_BALANCE', 100),
 ];
