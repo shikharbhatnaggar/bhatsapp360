@@ -14,11 +14,37 @@ class WhatsappAccountController extends Controller
     public function edit(Request $request)
     {
         $account = $request->user()->tenant->whatsappAccounts()->first();
+        $subscribed = null;
+
+        // Only ask Meta if we have something worth asking with.
+        if ($account && $account->hasUsableToken() && ! $account->blockedReason()) {
+            $result = WhatsAppClient::for($account)->subscribedApps();
+            $subscribed = $result['ok'] ? count(Arr::get($result, 'body.data', [])) > 0 : null;
+        }
 
         return view('settings.whatsapp', [
             'account' => $account,
+            'subscribed' => $subscribed,
             'verifyToken' => $account?->webhook_verify_token ?? Str::random(24),
         ]);
+    }
+
+    /** Subscribes your Meta app to this WABA's webhook events. */
+    public function subscribe(Request $request)
+    {
+        $account = $request->user()->tenant->whatsappAccounts()->firstOrFail();
+        $result = WhatsAppClient::for($account)->subscribeApp();
+
+        if (! $result['ok']) {
+            ActivityLogger::log('whatsapp_account.subscribe_failed', 'Webhook subscription failed', $account, $result['error'] ?? []);
+
+            return back()->withErrors(['subscribe' => 'Could not subscribe your app to this business account: '
+                .WhatsAppClient::describeError($result)]);
+        }
+
+        ActivityLogger::log('whatsapp_account.subscribed', 'App subscribed to WABA webhooks', $account, $result['body']);
+
+        return back()->with('status', 'Subscribed. Delivery receipts, replies and template decisions will now be delivered to your callback URL.');
     }
 
     public function save(Request $request)
@@ -65,17 +91,33 @@ class WhatsappAccountController extends Controller
         return back()->with('status', 'Settings saved.');
     }
 
-    /** Calls GET /{phone_number_id} and stores what comes back. */
+    /**
+     * Checks both IDs, not just the sender: templates are created against the
+     * WABA, so a wrong WABA ID only shows up at submission time otherwise.
+     */
     public function verify(Request $request)
     {
         $account = $request->user()->tenant->whatsappAccounts()->firstOrFail();
-        $result = WhatsAppClient::for($account)->verifyNumber();
+        $client = WhatsAppClient::for($account);
+
+        $waba = $client->verifyBusinessAccount();
+
+        if (! $waba['ok']) {
+            $hint = $this->explainWabaFailure($client, $account->waba_id, $waba);
+
+            ActivityLogger::log('whatsapp_account.verify_failed', 'WABA check failed', $account, $waba['error'] ?? []);
+
+            return back()->withErrors(['waba' => $hint]);
+        }
+
+        $result = $client->verifyNumber();
 
         if (! $result['ok']) {
-            ActivityLogger::log('whatsapp_account.verify_failed', 'Connection test failed', $account, $result['error'] ?? []);
+            ActivityLogger::log('whatsapp_account.verify_failed', 'Phone number check failed', $account, $result['error'] ?? []);
 
             return back()->withErrors([
-                'connection' => Arr::get($result, 'error.message', 'WhatsApp did not accept these credentials.'),
+                'connection' => 'The business account is reachable, but the phone number ID is not: '
+                    .WhatsAppClient::describeError($result),
             ]);
         }
 
@@ -88,8 +130,31 @@ class WhatsappAccountController extends Controller
             'last_verification_response' => $result['body'],
         ]);
 
-        ActivityLogger::log('whatsapp_account.verified', 'Connection test passed', $account, $result['body']);
+        ActivityLogger::log('whatsapp_account.verified', 'Connection test passed', $account, [
+            'number' => $result['body'],
+            'waba' => $waba['body'],
+        ]);
 
-        return back()->with('status', 'Connected. '.Arr::get($result, 'body.verified_name', 'Number verified').' is ready to send.');
+        return back()->with('status', 'Connected. '.Arr::get($result, 'body.verified_name', 'Number verified')
+            .' on business account '.Arr::get($waba, 'body.name', $account->waba_id).' is ready to send.');
+    }
+
+    /**
+     * Error 100 on a WABA lookup has three usual causes. Probe the ID so the
+     * message names the actual problem instead of repeating Meta's generic text.
+     */
+    protected function explainWabaFailure(WhatsAppClient $client, string $wabaId, array $result): string
+    {
+        $detail = WhatsAppClient::describeError($result);
+
+        if ($kind = $client->identify($wabaId)) {
+            return "That ID belongs to a {$kind}, not a WhatsApp Business Account. "
+                .'Copy the WABA ID from Business Settings → Accounts → WhatsApp Accounts, '
+                ."or from the API Setup panel where it is labelled “WhatsApp Business Account ID”. ({$detail})";
+        }
+
+        return 'WhatsApp cannot load business account '.$wabaId.'. Check that the ID is correct, that your '
+            .'system user is assigned to this WhatsApp account in Business Settings with full control, and that '
+            .'the token carries both whatsapp_business_management and whatsapp_business_messaging. ('.$detail.')';
     }
 }

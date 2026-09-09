@@ -129,6 +129,7 @@
             <code class="mt-3 block break-all rounded-lg bg-ink-50 px-3 py-2 text-xs text-ink-700">{{ url('/webhooks/whatsapp/'.$tenant->id) }}</code>
 
             @if ($account)
+                @php $subscribed = $subscribed ?? null; @endphp
                 <div class="mt-4 border-t border-ink-100 pt-4">
                     <h3 class="text-sm text-ink-700">App subscription</h3>
 
