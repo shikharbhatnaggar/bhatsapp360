@@ -84,6 +84,15 @@ class DiagnosticsController extends Controller
                 'Deploy the updated app/Services/TemplateSyncService.php.',
             ),
             $this->check(
+                'Settings page passes $subscribed',
+                str_contains(
+                    (string) @file_get_contents(app_path('Http/Controllers/WhatsappAccountController.php')),
+                    "'subscribed' =>"
+                ),
+                'The settings view reads this; an older controller throws Undefined variable.',
+                'Deploy the updated app/Http/Controllers/WhatsappAccountController.php.',
+            ),
+            $this->check(
                 'Webhook timestamps are timezone-corrected',
                 str_contains(
                     (string) @file_get_contents(app_path('Http/Controllers/WebhookController.php')),
